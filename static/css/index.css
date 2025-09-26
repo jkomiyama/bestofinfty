@@ -67,6 +67,30 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+.arxiv-button {
+  background: #f97316 !important;
+  border-color: #f97316 !important;
+  color: #ffffff !important;
+  box-shadow: var(--shadow-md);
+}
+
+.arxiv-button:hover {
+  transform: translateY(-2px);
+  background: #ea580c !important;
+  border-color: #ea580c !important;
+  box-shadow: var(--shadow-lg);
+}
+
+.arxiv-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.35);
+}
+
+.arxiv-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-md);
+}
+
 .footer .icon-link {
     font-size: 25px;
     color: var(--text-secondary);
