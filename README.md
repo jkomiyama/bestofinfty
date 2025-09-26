@@ -78,3 +78,17 @@ Parts of this project page were adopted from the [Nerfies](https://nerfies.githu
 
 ## Website License
 <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+
+## This project page instance
+
+- Paper: Best-of-∞ — Asymptotic Performance of Test-Time Compute
+- PDF served from: `paper_latex/majority_vote_iclr2026.pdf`
+- Carousel images from: `paper_latex/images/` (performances.png, adaptive_stop.png, combination.png, simplex.png)
+- Edit page content in: `index.html`
+  - Title/SEO meta: head section
+  - Authors/Affiliations: hero section near the top (search for `TBD Authors`)
+  - Abstract: Abstract section
+  - Poster/Paper link: points to `paper_latex/majority_vote_iclr2026.pdf`
+  - BibTeX: at the bottom (`#BibTeX` section)
+
+When you have final author list and links (arXiv, GitHub), replace placeholder `TBD` values and add links in the hero buttons.
