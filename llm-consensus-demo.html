@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .start-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        .scenario-btn {
+            background: #2196F3;
+            color: white;
+        }
+        .reset-btn {
+            background: #f44336;
+            color: white;
+        }
+        .demo-area {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .chart-container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 12px;
+            height: 300px;
+        }
+        .response-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .robot-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            min-height: 100px;
+        }
+        .robot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            opacity: 0;
+            transform: scale(0.5);
+            animation: robotAppear 0.5s forwards;
+        }
+        @keyframes robotAppear {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .robot-icon {
+            font-size: 40px;
+        }
+        .robot-answer {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: white;
+        }
+        .answer-A { background: #2196F3; }
+        .answer-B { background: #FF9800; }
+        .answer-C { background: #4CAF50; }
+        .answer-D { background: #E91E63; }
+        .status {
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.terminated {
+            background: #d4edda;
+            color: #155724;
+            animation: pulse 1s;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        @media (max-width: 768px) {
+            .demo-area {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="controls">
+            <button class="scenario-btn" onclick="setScenario(1)">Problem 1: Easy Problem</button>
+            <button class="scenario-btn" onclick="setScenario(2)">Problem 2: Hard Problem</button>
+            <button class="start-btn" onclick="startDemo()">▶ Start Demo</button>
+            <button class="reset-btn" onclick="resetDemo()">🔄 Reset</button>
+        </div>
+
+        <div class="demo-area">
+            <div>
+                <h3 style="text-align: center;">Frequency Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="frequencyChart"></canvas>
+                </div>
+            </div>
+            <div class="response-area">
+                <h3 style="text-align: center;">LLM Responses</h3>
+                <div class="robot-container" id="robotContainer"></div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Responses</div>
+                        <div class="stat-value" id="totalCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Top Answer</div>
+                        <div class="stat-value" id="maxAnswer">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Top Count</div>
+                        <div class="stat-value" id="maxCount">0</div>
+                    </div>
+                </div>
+                <div class="status running" id="status">Waiting...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart;
+        let currentScenario = 1;
+        let isRunning = false;
+        let animationTimeout;
+
+        const scenarios = {
+            1: {
+                frequencies: { A: 75, B: 8, C: 7, D: 10 },
+                answers: ['A', 'A', 'A'],
+                threshold: 3
+            },
+            2: {
+                frequencies: { A: 25, B: 25, C: 30, D: 20 },
+                answers: ['B', 'C', 'A', 'C', 'B', 'C', 'D', 'C', 'C'],
+                threshold: 5
+            }
+        };
+
+		function initChart() {
+		  const ctx = document.getElementById('frequencyChart').getContext('2d');
+		  const data = scenarios[currentScenario].frequencies;
+
+		  if (chart) chart.destroy();
+
+		  chart = new Chart(ctx, {
+		    type: 'bar',
+		    data: {
+		      labels: ['(A)', '(B)', '(C)', '(D)'],
+		      datasets: [{
+		        label: 'Frequency',
+		        data: [data.A, data.B, data.C, data.D],
+		        backgroundColor: ['#2196F3', '#FF9800', '#4CAF50', '#E91E63']
+		      }]
+		    },
+		    options: {
+		      responsive: true,
+		      maintainAspectRatio: false,
+		      plugins: { legend: { display: false } },
+		      scales: {
+		        y: {
+		          beginAtZero: true,
+		          min: 0,
+		          max: 100,              // 合計が100なら固定でOK
+		          ticks: { stepSize: 10 },
+		          grid: { color: '#ddd' }
+		        },
+		        x: { grid: { display: false } }
+		      }
+		    }
+		  });
+		}
+		
+        function setScenario(num) {
+            if (isRunning) return;
+            currentScenario = num;
+            resetDemo();
+            initChart();
+        }
+
+        function resetDemo() {
+            isRunning = false;
+            clearTimeout(animationTimeout);
+            document.getElementById('robotContainer').innerHTML = '';
+            document.getElementById('status').className = 'status running';
+            document.getElementById('status').textContent = 'Waiting...';
+            document.getElementById('totalCount').textContent = '0';
+            document.getElementById('maxAnswer').textContent = '-';
+            document.getElementById('maxCount').textContent = '0';
+            initChart();
+        }
+
+        function startDemo() {
+            if (isRunning) return;
+            isRunning = true;
+            
+            document.getElementById('robotContainer').innerHTML = '';
+            document.getElementById('status').className = 'status running';
+            document.getElementById('status').textContent = 'Generating...';
+            
+            const answers = scenarios[currentScenario].answers;
+            const threshold = scenarios[currentScenario].threshold;
+            const counts = {};
+            
+            answers.forEach((answer, index) => {
+                animationTimeout = setTimeout(() => {
+                    addRobot(answer);
+                    counts[answer] = (counts[answer] || 0) + 1;
+                    
+                    const maxEntry = Object.entries(counts).reduce((a, b) => a[1] > b[1] ? a : b);
+                    const maxAnswer = maxEntry[0];
+                    const maxCount = maxEntry[1];
+                    
+                    document.getElementById('totalCount').textContent = index + 1;
+                    document.getElementById('maxAnswer').textContent = maxAnswer;
+                    document.getElementById('maxCount').textContent = maxCount;
+                    
+                    if (maxCount >= threshold) {
+                        setTimeout(() => {
+                            document.getElementById('status').className = 'status terminated';
+                            document.getElementById('status').textContent = `✓ Terminate (${maxCount}/${index + 1} match)`;
+                            isRunning = false;
+                        }, 500);
+                    } else if (index === answers.length - 1) {
+                        isRunning = false;
+                    }
+                }, (index + 1) * 800);
+            });
+        }
+
+        function addRobot(answer) {
+            const container = document.getElementById('robotContainer');
+            const robot = document.createElement('div');
+            robot.className = 'robot';
+            robot.innerHTML = `
+                <div class="robot-icon">🤖</div>
+                <div class="robot-answer answer-${answer}">(${answer})</div>
+            `;
+            container.appendChild(robot);
+        }
+
+        initChart();
+    </script>
+</body>
+</html>
